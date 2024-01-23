@@ -28,16 +28,18 @@ async function run() {
 
         const newCollection = client.db('academy').collection('super')
         const userCollection = client.db('houseHonter').collection('userInfo')
+        const houseCollection = client.db('houseHonter').collection('house')
 
-        // server checking
-        app.get('/latest', async (req, res) => {
+        // get all houses 
+        app.get('/all-house', async (req, res) => {
             try {
-                const newinfo = await newCollection.find().toArray()
-                res.send(newinfo)
+                const items = await houseCollection.find().toArray();
+                res.send(items);
             } catch (error) {
-                console.log(error);
+                console.error('Error getting items:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
             }
-        })
+        });
 
         // post user info in the database.
         app.post('/register', async (req, res) => {
@@ -91,7 +93,6 @@ async function run() {
         app.get('/current-userinfo', async (req, res) => {
             try {
                 const userEmail = req.query.email
-                console.log(userEmail);
                 if (!userEmail) {
                     // If email is not provided in query parameters, return a bad request response
                     return res.status(400).json({ error: 'Email parameter is missing' });
@@ -105,6 +106,25 @@ async function run() {
                 res.status(500).json({ error: 'Internal Server Error' })
             }
         })
+
+        // add House by houseOwner
+        app.post('/onwer/added-house', async (req, res) => {
+            try {
+                const { name, email, address, bed, bath, image, price, description } = req.body;
+                // Create a document to be inserted
+                const housePropertyDocument = {
+                    name, email, address, bed, bath, image, price, description
+                };
+                // console.log(housePropertyDocument);
+                // Insert a single document
+                const result = await houseCollection.insertOne(housePropertyDocument);
+                console.log('Inserted property ID:', result.insertedId);
+                res.status(201).json({ message: 'Property added successfully' });
+            } catch (error) {
+                console.error('Error adding property:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
