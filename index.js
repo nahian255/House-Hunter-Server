@@ -67,7 +67,44 @@ async function run() {
             }
         });
 
+        // Login function 
+        app.post('/user-login', async (req, res) => {
+            const { email, password } = req.body;
+            try {
+                // Check if the user exists in the userInfo collection
+                const user = await userCollection.findOne({ email, password });
 
+                if (user) {
+                    // User is found, send a success response
+                    res.status(200).json({ message: 'Login successful' });
+                } else {
+                    // User not found, send an error response
+                    res.status(401).json({ error: 'email and password not match' });
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+        // get userinfo by email
+        app.get('/current-userinfo', async (req, res) => {
+            try {
+                const userEmail = req.query.email
+                console.log(userEmail);
+                if (!userEmail) {
+                    // If email is not provided in query parameters, return a bad request response
+                    return res.status(400).json({ error: 'Email parameter is missing' });
+                }
+                // Query the userinfo collection for data with the specified email
+                const userInfo = await userCollection.find({ email: userEmail }).toArray();
+                res.status(200).json(userInfo);
+
+            } catch (error) {
+                console.log(error);
+                res.status(500).json({ error: 'Internal Server Error' })
+            }
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
