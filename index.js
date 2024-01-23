@@ -27,7 +27,9 @@ async function run() {
         await client.connect();
 
         const newCollection = client.db('academy').collection('super')
+        const userCollection = client.db('houseHonter').collection('userInfo')
 
+        // server checking
         app.get('/latest', async (req, res) => {
             try {
                 const newinfo = await newCollection.find().toArray()
@@ -36,6 +38,35 @@ async function run() {
                 console.log(error);
             }
         })
+
+        // post user info in the database.
+        app.post('/register', async (req, res) => {
+            const { name, role, phoneNum, email, password } = req.body;
+
+            try {
+                // Check if the email is already registered
+                const existingUser = await userCollection.findOne({ email });
+
+                if (existingUser) {
+                    // If the email is already used, send a response indicating the conflict
+                    res.status(409).json({ error: 'Email already in use' });
+                } else {
+                    // Insert the user information into the userInfo collection
+                    const result = await userCollection.insertOne({
+                        name,
+                        role,
+                        phoneNum,
+                        email,
+                        password,
+                    });
+                    res.status(201).json({ message: 'Register successfully' });
+                }
+            } catch (error) {
+                console.error('Error during registration:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
 
 
         // Send a ping to confirm a successful connection
