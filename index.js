@@ -41,6 +41,24 @@ async function run() {
             }
         });
 
+        //get myhoue by email
+        app.get('/onwer/house', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+
+                // console.log(userEmail);
+                if (!userEmail) {
+                    // If email is not provided in query parameters, return a bad request response
+                    return res.status(400).json({ error: 'Email parameter is missing' });
+                }
+                const gethouse = await houseCollection.find({ email: userEmail }).toArray();
+                res.status(200).json(gethouse);
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
         // post user info in the database.
         app.post('/register', async (req, res) => {
             const { name, role, phoneNum, email, password } = req.body;
